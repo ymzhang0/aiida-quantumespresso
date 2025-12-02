@@ -17,6 +17,7 @@ class MatdynCalculation(NamelistsCalculation):
     _PHONON_FREQUENCIES_NAME = 'phonon_frequencies.dat'
     _PHONON_MODES_NAME = 'phonon_displacements.dat'
     _PHONON_DOS_NAME = 'phonon_dos.dat'
+    _ELASTIC_NAME = 'matdyn.elastic.yaml'
 
     _default_namelists = ['INPUT']
     _blocked_keywords = [
@@ -25,7 +26,7 @@ class MatdynCalculation(NamelistsCalculation):
         ('INPUT', 'fldos', _PHONON_DOS_NAME),  # output density of states
     ]
 
-    _internal_retrieve_list = [_PHONON_FREQUENCIES_NAME, _PHONON_DOS_NAME]
+    _internal_retrieve_list = [_PHONON_FREQUENCIES_NAME, _PHONON_DOS_NAME, _ELASTIC_NAME]
     _default_parser = 'quantumespresso.matdyn'
 
     @classmethod
@@ -41,6 +42,7 @@ class MatdynCalculation(NamelistsCalculation):
         spec.output('output_parameters', valid_type=orm.Dict)
         spec.output('output_phonon_bands', valid_type=orm.BandsData, required=False)
         spec.output('output_phonon_dos', valid_type=orm.XyData, required=False)
+        spec.output('output_elastic_properties', valid_type=orm.Dict, required=False)
         spec.default_output_node = 'output_parameters'
 
         spec.exit_code(
@@ -50,6 +52,11 @@ class MatdynCalculation(NamelistsCalculation):
         )
         spec.exit_code(
             334, 'ERROR_OUTPUT_DOS', message='The output DOS file could not be read from the retrieved folder.'
+        )
+        spec.exit_code(
+            335,
+            'ERROR_OUTPUT_ELASTIC',
+            message='The output elastic properties file could not be read from the retrieved folder.',
         )
         spec.exit_code(410, 'ERROR_OUTPUT_KPOINTS_MISSING', message='Number of kpoints not found in the output data')
         spec.exit_code(

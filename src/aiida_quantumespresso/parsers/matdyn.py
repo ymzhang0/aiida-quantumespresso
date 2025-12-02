@@ -29,7 +29,7 @@ class MatdynParser(BaseParser):
 
         filename_frequencies = MatdynCalculation._PHONON_FREQUENCIES_NAME  # noqa: SLF001
         filename_dos = MatdynCalculation._PHONON_DOS_NAME  # noqa: SLF001
-
+        
         if filename_frequencies not in self.retrieved.base.repository.list_object_names():
             return self.exit(self.exit_codes.ERROR_OUTPUT_FREQUENCIES)
 
@@ -80,6 +80,18 @@ class MatdynParser(BaseParser):
             output_bands.set_bands(parsed_data.pop('phonon_bands'), units='THz')
 
             self.out('output_phonon_bands', output_bands)
+
+        filename_elastic = MatdynCalculation._ELASTIC_NAME  # noqa: SLF001
+
+        if parameters['INPUT'].get('el_const', False):
+            if filename_elastic not in self.retrieved.base.repository.list_object_names():
+                return self.exit(self.exit_codes.ERROR_OUTPUT_ELASTIC)
+
+            parsed_data_elastic = parse_raw_matdyn_elastic_file(
+                self.retrieved.base.repository.get_object_content(filename_elastic)
+            )
+            parsed_data.update(parsed_data_elastic)
+            self.out('output_elastic_properties', orm.Dict(parsed_data.pop('elastic_properties')))
 
         for message in parsed_data['warnings']:
             self.logger.error(message)
@@ -152,4 +164,39 @@ def parse_raw_matdyn_phonon_file(phonon_frequencies):
 
     parsed_data['phonon_bands'] = freq_matrix
 
+    return parsed_data
+
+def parse_raw_matdyn_elastic_file(matdyn_elastic):
+    """Parses the matdyn.elastic.yaml file.
+
+    :param matdyn_elastic: matdyn.elastic.yaml file from the matdyn calculation
+
+    :return dict parsed_data: keys:
+         * warnings: parser warnings raised
+         * elastic_constants: elastic constants
+         * elastic_compliance: elastic compliance
+         * mass_density: mass density
+         * kleinman_para: kleinman para
+         * cauchy_pressure: cauchy pressure
+         * pugh_ratios: pugh ratios
+         * poisson_ratios: poisson ratios
+         * young_moduli: young moduli
+         * bulk_moduli: bulk moduli
+         * shear_moduli: shear moduli
+         * p_wave_modulus: p wave modulus
+         * lame_1st_para: lame 1st para
+         * lame_2nd_para: lame 2nd para
+    """
+
+    import yaml
+
+    parsed_data = {}
+    parsed_data['warnings'] = []
+    try:
+        elastic_properties = yaml.safe_load(matdyn_elastic)
+    except yaml.YAMLError as e:
+        parsed_data['warnings'].append(f'Error while parsing the elastic properties: {e}')
+        return parsed_data
+
+    parsed_data['elastic_properties'] = elastic_properties
     return parsed_data
