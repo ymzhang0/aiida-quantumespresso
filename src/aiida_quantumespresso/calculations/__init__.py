@@ -480,7 +480,7 @@ class BasePwCpInputGenerator(CalcJob):
         pseudos,
         structure,
         kpoints=None,
-        use_fractional=False,
+        # use_fractional=False,
     ):
         """Create the input file in string format for a pw.x or cp.x calculation for the given inputs."""
         import re
@@ -586,6 +586,9 @@ class BasePwCpInputGenerator(CalcJob):
 
         # ------------ ATOMIC_POSITIONS -----------
         coordinates = [site.position for site in structure.sites]
+
+        use_fractional = settings.pop('USE_FRACTIONAL', False)
+
         if use_fractional:
             atomic_positions_card_header = 'ATOMIC_POSITIONS crystal\n'
             coordinates = np.dot(coordinates, np.linalg.inv(np.array(structure.cell))).tolist()
