@@ -264,25 +264,6 @@ class PhCalculation(CalcJob):
         if not restart_flag:  # if it is a restart, it will be copied over
             folder.get_subfolder(self._FOLDER_DYNAMICAL_MATRIX, create=True)
 
-        with folder.open(self.metadata.options.input_filename, 'w') as infile:
-            for namelist_name in namelists_toprint:
-                infile.write(f'&{namelist_name}\n')
-                # namelist content; set to {} if not present, so that we leave an empty namelist
-                namelist = parameters.pop(namelist_name, {})
-                for key, value in sorted(namelist.items()):
-                    infile.write(convert_input_to_namelist_entry(key, value))
-                infile.write('/\n')
-
-            # add list of qpoints if required
-            if postpend_text is not None:
-                infile.write(postpend_text)
-
-        if parameters:
-            raise exceptions.InputValidationError(
-                'The following namelists are specified in parameters, but are not valid namelists for the current type '
-                f'of calculation: {", ".join(list(parameters.keys()))}'
-            )
-
         # copy the parent scratch
         symlink = settings.pop('PARENT_FOLDER_SYMLINK', self._default_symlink_usage)  # a boolean
         if symlink:
@@ -372,7 +353,25 @@ class PhCalculation(CalcJob):
                             self._FOLDER_ELECTRON_PHONON,
                         )
                     )
+                    
+        with folder.open(self.metadata.options.input_filename, 'w') as infile:
+            for namelist_name in namelists_toprint:
+                infile.write(f'&{namelist_name}\n')
+                # namelist content; set to {} if not present, so that we leave an empty namelist
+                namelist = parameters.pop(namelist_name, {})
+                for key, value in sorted(namelist.items()):
+                    infile.write(convert_input_to_namelist_entry(key, value))
+                infile.write('/\n')
 
+            # add list of qpoints if required
+            if postpend_text is not None:
+                infile.write(postpend_text)
+
+        if parameters:
+            raise exceptions.InputValidationError(
+                'The following namelists are specified in parameters, but are not valid namelists for the current type '
+                f'of calculation: {", ".join(list(parameters.keys()))}'
+            )
         # Create an `.EXIT` file if `only_initialization` flag in `settings` is set to `True`
         if settings.pop('ONLY_INITIALIZATION', False):
             with folder.open(f'{self._PREFIX}.EXIT', 'w') as handle:

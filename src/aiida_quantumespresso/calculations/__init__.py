@@ -814,7 +814,9 @@ class BasePwCpInputGenerator(CalcJob):
 
         return inputfile, local_copy_list_to_append
 
-
+def _lowercase_dict(dictionary, dict_name):
+    return _case_transform_dict(dictionary, dict_name, '_lowercase_dict', str.lower)
+    
 def _uppercase_dict(dictionary, dict_name):
     return _case_transform_dict(dictionary, dict_name, '_uppercase_dict', str.upper)
 
