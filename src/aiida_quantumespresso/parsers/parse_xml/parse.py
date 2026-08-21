@@ -609,7 +609,10 @@ def parse_xml(xml_file):
         'number_of_species': outputs['atomic_species']['@ntyp'],
         'species': {
             'index': [i + 1 for i, specie in enumerate(species)],
-            'pseudo': [specie['pseudo_file'] for specie in species],
+            'pseudo': [
+                specie['pseudo_file']['$'] if isinstance(specie['pseudo_file'], dict) else specie['pseudo_file']
+                for specie in species
+            ],
             'mass': [specie['mass'] for specie in species],
             'type': [specie['@name'] for specie in species],
         },
