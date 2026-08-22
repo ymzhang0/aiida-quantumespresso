@@ -67,3 +67,31 @@ def test_seekpath_analysis_intersite(generate_structure):
 
     with pytest.raises(NotImplementedError, match='Intersite Hubbard parameters are not yet supported.'):
         seekpath_structure_analysis(orig_structure)
+
+
+def test_seekpath_analysis_projectors_and_formulation():
+    """Test that projectors and formulation are correctly preserved in `seekpath_structure_analysis`."""
+    cell = [[5.43, 0.0, 0.0], [0.0, 5.43, 0.0], [0.0, 0.0, 5.43]]
+    sites = (
+        ('Co', 'Co0', (0.0, 0.0, 0.0)),
+        ('Co', 'Co0', (0.0, 2.715, 2.715)),
+        ('Co', 'Co1', (2.715, 0.0, 2.715)),
+        ('Co', 'Co1', (2.715, 2.715, 0.0)),
+    )
+    orig_structure = HubbardStructureData(cell=cell, sites=sites)
+    hubbard = orig_structure.hubbard
+    hubbard.projectors = 'atomic'
+    hubbard.formulation = 'liechtenstein'
+    orig_structure.hubbard = hubbard
+
+    orig_structure.initialize_onsites_hubbard('Co0', '3d', 4.0, 'Ueff', True)
+
+    result = seekpath_structure_analysis(orig_structure)
+
+    prim_structure = result['primitive_structure']
+    conv_structure = result['conv_structure']
+
+    assert prim_structure.hubbard.projectors == 'atomic'
+    assert prim_structure.hubbard.formulation == 'liechtenstein'
+    assert conv_structure.hubbard.projectors == 'atomic'
+    assert conv_structure.hubbard.formulation == 'liechtenstein'

@@ -45,6 +45,11 @@ def update_structure_with_hubbard(structure, orig_structure):
 
     hubbard_structure = HubbardStructureData.from_structure(structure)
 
+    hubbard = hubbard_structure.hubbard
+    hubbard.projectors = orig_structure.hubbard.projectors
+    hubbard.formulation = orig_structure.hubbard.formulation
+    hubbard_structure.hubbard = hubbard
+
     if is_intersite_hubbard(orig_structure.hubbard):
         raise NotImplementedError('Intersite Hubbard parameters are not yet supported.')
 
